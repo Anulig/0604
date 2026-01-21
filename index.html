@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Звёздное небо с пожеланиями</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Buda:wght@300&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Courier+New&display=swap" rel="stylesheet">
+    
+    <style>
+/* ===== СБРОС И БАЗОВЫЕ СТИЛИ ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Cormorant Garamond', serif;
+    background: #0a0b18;
+    color: #f0e6d2;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="none" stroke="%23a3d5ff" stroke-width="0.7" stroke-opacity="0.7"/></svg>') 10 10, auto;
+}
+
+/* ===== НАЧАЛЬНАЯ ЗАСТАВКА ===== */
+#splashScreen {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: #0a0b18;
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    transition: opacity 2s ease;
+}
+
+#splashText {
+    font-family: 'Buda', cursive;
+    font-size: 2.5em;
+    color: #f0e6d2;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(20px);
+    text-shadow: 0 0 20px rgba(163, 213, 255, 0.5);
+    animation: fadeInUp 3s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== ОСНОВНОЙ КОНТЕЙНЕР ===== */
+#skyContainer {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Фон неба */
+#nightSky {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center,
+        #0a0b18 0%,
+        #070813 25%,
+        #050610 50%,
+        #03050c 75%,
+        #020204 100%);
+    z-index: 1;
+}
+
+/* Фоновые звёзды */
+#backgroundStars {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+.bg-star {
+    position: absolute;
+    background-color: #fff;
+    border-radius: 50%;
+    opacity: 0.8;
+}
+
+/* Основные звёзды с пожеланиями */
+.star {
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    z-index: 5;
+    animation: pulse 2.5s infinite ease-in-out;
+}
+
+/* Яркое мерцание */
+@keyframes pulse {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.1); }
+}
+
+.star:hover {
+    transform: scale(1.4) !important;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 1),
+                0 0 60px rgba(163, 213, 255, 0.7);
+    animation-play-state: paused;
+}
+
+/* Цветовые акценты */
+.star.accent-blue {
+    background-color: #a3d5ff;
+    box-shadow: 0 0 20px rgba(163, 213, 255, 0.9);
+}
+
+.star.accent-gold {
+    background-color: #ffd700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.9);
+}
+
+/* Луна */
+#moon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle at 30% 30%,
+        #f8f4e6 0%,
+        #e6dfc5 20%,
+        #d4c9a5 40%,
+        #b8a87e 100%);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 6;
+    box-shadow: 
+        0 0 70px rgba(248, 244, 230, 0.8),
+        0 0 120px rgba(248, 244, 230, 0.4),
+        inset -8px -8px 15px rgba(100, 90, 70, 0.3);
+    transition: all 0.5s ease;
+}
+
+#moon:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 
+        0 0 90px rgba(248, 244, 230, 1),
+        0 0 160px rgba(248, 244, 230, 0.6);
+}
+
+#moonLabel {
+    position: absolute;
+    top: calc(50% + 60px);
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Buda', cursive;
+    font-size: 0.9em;
+    color: rgba(163, 213, 255, 0.9);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    white-space: nowrap;
+    z-index: 6;
+}
+
+#moon:hover + #moonLabel {
+    opacity: 1;
+}
+
+/* ===== ПЕЙЗАЖ - ГОРЫ ===== */
+.mountain-fade {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 35%;
+    background: linear-gradient(to top, 
+        rgba(10, 11, 24, 1) 0%,
+        rgba(10, 11, 24, 0.5) 50%,
+        transparent 100%);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.mountains {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 45%;
+    z-index: 3;
+    opacity: 0;
+    animation: mountainsAppear 3s ease 2s forwards;
+    overflow: hidden;
+}
+
+.mountain-range {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.mountain-layer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background-color: #0a0f28;
+    clip-path: polygon(0% 100%, 5% 80%, 10% 85%, 15% 70%, 20% 90%, 25% 75%,
+                       30% 95%, 35% 65%, 40% 85%, 45% 60%, 50% 100%, 55% 70%,
+                       60% 90%, 65% 55%, 70% 80%, 75% 50%, 80% 95%, 85% 65%,
+                       90% 85%, 95% 75%, 100% 100%);
+}
+
+#mountains-back {
+    height: 60%;
+    background-color: #111a36;
+    opacity: 0.7;
+    clip-path: polygon(0% 100%, 10% 60%, 20% 80%, 30% 50%, 40% 70%, 50% 40%,
+                       60% 90%, 70% 55%, 80% 75%, 90% 65%, 100% 100%);
+}
+
+#mountains-mid {
+    height: 75%;
+    background-color: #0d1530;
+    opacity: 0.85;
+    clip-path: polygon(0% 100%, 5% 40%, 15% 70%, 25% 30%, 35% 85%, 45% 45%,
+                       55% 95%, 65% 35%, 75% 75%, 85% 50%, 95% 90%, 100% 100%);
+}
+
+#mountains-front {
+    height: 90%;
+    background-color: #080d22;
+    opacity: 0.95;
+    clip-path: polygon(0% 100%, 3% 20%, 8% 60%, 13% 10%, 18% 80%, 23% 25%,
+                       28% 95%, 33% 15%, 38% 70%, 43% 35%, 48% 85%, 53% 45%,
+                       58% 100%, 63% 30%, 68% 75%, 73% 50%, 78% 90%, 83% 40%,
+                       88% 65%, 93% 55%, 98% 85%, 100% 100%);
+}
+
+@keyframes mountainsAppear {
+    to { opacity: 1; }
+}
+
+/* Секретный кристалл */
+#secretCrystal {
+    position: absolute;
+    bottom: 22%;
+    left: 20%;
+    width: 10px;
+    height: 10px;
+    background: radial-gradient(circle, 
+        rgba(200, 230, 255, 0.95) 0%,
+        rgba(120, 180, 255, 0.8) 50%,
+        transparent 70%);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 4;
+    opacity: 0.4;
+    animation: crystalGlow 3s infinite alternate ease-in-out;
+    transition: all 0.3s;
+    box-shadow: 0 0 10px rgba(163, 213, 255, 0.6);
+}
+
+#secretCrystal:hover {
+    opacity: 1;
+    transform: scale(1.8);
+    box-shadow: 0 0 20px rgba(163, 213, 255, 0.9);
+}
+
+@keyframes crystalGlow {
+    0% { opacity: 0.4; box-shadow: 0 0 8px rgba(163, 213, 255, 0.5); }
+    100% { opacity: 0.7; box-shadow: 0 0 15px rgba(163, 213, 255, 0.8); }
+}
+
+/* ===== ШЛЕЙФ ЗВЁЗДНОЙ ПЫЛИ ===== */
+.trail-dot {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background-color: rgba(163, 213, 255, 0.5);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 4;
+    box-shadow: 0 0 5px rgba(163, 213, 255, 0.5);
+}
+
+/* ===== ПАДАЮЩИЕ ЗВЁЗДЫ ===== */
+.shooting-star {
+    position: absolute;
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 1) 20%,
+        rgba(255, 255, 255, 0.9) 50%,
+        transparent 100%);
+    border-radius: 1px;
+    pointer-events: none;
+    z-index: 3;
+    transform: rotate(-45deg);
+    opacity: 0;
+}
+
+/* ===== ФЕЙЕРВЕРК ===== */
+.firework {
+    position: absolute;
+    bottom: 18%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+}
+
+/* ===== МОДАЛЬНЫЕ ОКНА (КРАСИВЫЕ) ===== */
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    background: rgba(8, 10, 26, 0.96);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(163, 213, 255, 0.25);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 560px;
+    width: 90%;
+    z-index: 1000;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+    box-shadow: 
+        0 30px 80px rgba(0, 3, 15, 0.9),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.modal.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.modal-content h2 {
+    font-family: 'Buda', cursive;
+    font-weight: 300;
+    font-size: 2.3em;
+    margin-bottom: 30px;
+    color: #f0e6d2;
+    letter-spacing: 1.5px;
+    text-shadow: 0 0 25px rgba(240, 230, 210, 0.5);
+}
+
+.modal-content p {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 1.45em;
+    line-height: 1.8;
+    color: #e6f2ff;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.instruction-text {
+    text-align: center;
+    font-style: italic;
+    color: #a3d5ff;
+    font-size: 1.15em;
+    margin-top: 25px;
+    line-height: 1.7;
+}
+
+/* Кнопка закрытия */
+.close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: #a3d5ff;
+    font-size: 28px;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+    color: #fff;
+    background: rgba(163, 213, 255, 0.15);
+    transform: rotate(90deg);
+}
+
+/* Поле для ввода желания */
+#wishInput {
+    width: 100%;
+    height: 130px;
+    background: rgba(4, 6, 18, 0.8);
+    border: 1px solid rgba(163, 213, 255, 0.35);
+    border-radius: 14px;
+    padding: 20px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25em;
+    color: #f0e6d2;
+    resize: none;
+    margin-bottom: 25px;
+    transition: all 0.3s ease;
+}
+
+#wishInput:focus {
+    outline: none;
+    border: 1px solid rgba(163, 213, 255, 0.8);
+    box-shadow: 0 0 25px rgba(163, 213, 255, 0.4);
+}
+
+/* Кнопки */
+.btn {
+    background: linear-gradient(135deg,
+        rgba(100, 130, 230, 0.95) 0%,
+        rgba(150, 110, 230, 0.9) 100%);
+    color: white;
+    border: none;
+    padding: 16px 38px;
+    border-radius: 50px;
+    font-family: 'Buda', cursive;
+    font-size: 1.15em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 1px;
+    margin: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(150, 110, 230, 0.5);
+}
+
+/* Счётчик звёзд */
+#counter {
+    position: fixed;
+    top: 25px;
+    right: 25px;
+    background: rgba(8, 10, 26, 0.8);
+    border: 1px solid rgba(163, 213, 255, 0.3);
+    border-radius: 14px;
+    padding: 14px 20px;
+    font-family: 'Courier New', monospace;
+    font-size: 1em;
+    color: #a3d5ff;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    min-width: 160px;
+    text-align: center;
+    opacity: 0;
+    animation: counterAppear 1s ease 3.5s forwards;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes counterAppear {
+    to { opacity: 1; }
+}
+
+#counter span {
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 1.3em;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* Анимация улетающего желания */
+.flying-wish {
+    position: absolute;
+    pointer-events: none;
+    z-index: 999;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4em;
+    color: #ffeb3b;
+    text-shadow: 
+        0 0 10px rgba(255, 235, 59, 0.8),
+        0 0 20px rgba(255, 235, 59, 0.4);
+    white-space: nowrap;
+    opacity: 1;
+}
+
+/* Футер */
+footer {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Courier New', monospace;
+    font-size: 0.8em;
+    color: rgba(163, 213, 255, 0.5);
+    z-index: 10;
+    text-align: center;
+    width: 100%;
+    pointer-events: none;
+    opacity: 0;
+    animation: footerAppear 2s ease 4s forwards;
+    text-shadow: 0 0 5px rgba(163, 213, 255, 0.3);
+}
+
+@keyframes footerAppear {
+    to { opacity: 1; }
+}
+</style>
+</head>
+<body>
+    <!-- Начальная заставка -->
+    <div id="splashScreen">
+        <div id="splashText">Сегодня особенный день...</div>
+    </div>
+    
+    <!-- Главный контейнер -->
+    <div id="skyContainer">
+        <div id="nightSky"></div>
+        <div id="backgroundStars"></div>
+        <div id="mainStars"></div>
+        
+        <!-- Горы -->
+        <div class="mountain-fade"></div>
+        <div class="mountains">
+            <div class="mountain-range">
+                <div class="mountain-layer" id="mountains-back"></div>
+                <div class="mountain-layer" id="mountains-mid"></div>
+                <div class="mountain-layer" id="mountains-front"></div>
+            </div>
+        </div>
+        
+        <!-- Секретный кристалл -->
+        <div id="secretCrystal" title="Нажмите на меня"></div>
+        
+        <!-- Луна -->
+        <div id="moon" title="Загадать желание"></div>
+        <div id="moonLabel">Загадать желание</div>
+        
+        <!-- Счётчик -->
+        <div id="counter">Найдено звёзд: <span id="foundCount">0</span> / 12</div>
+    </div>
+    
+    <!-- Окно инструкции -->
+    <div id="instructionModal" class="modal">
+        <button class="close-btn" id="closeInstruction">&times;</button>
+        <div class="modal-content">
+            <h2>Добро пожаловать под звёздное небо</h2>
+            <p>Перед Вами — 12 звёзд. Каждая хранит небольшое пожелание.</p>
+            <p>В центре — Луна. Она поможет Вам отправить своё желание к звёздам.</p>
+            <p>Когда Вы найдёте все звёзды и загадаете своё — откроется главное послание этого дня.</p>
+            <p class="instruction-text">Просто нажимайте на звёзды и следуйте за светом.</p>
+            <button class="btn" id="startBtn">Начать</button>
+        </div>
+    </div>
+    
+    <!-- Окно пожелания от звезды -->
+    <div id="wishModal" class="modal">
+        <button class="close-btn" id="closeWish">&times;</button>
+        <div class="modal-content"><p id="wishTextContent"></p></div>
+    </div>
+    
+    <!-- Окно "Загадать желание" -->
+    <div id="makeWishModal" class="modal">
+        <button class="close-btn" id="closeMakeWish">&times;</button>
+        <div class="modal-content">
+            <h2>Отправьте желание к звёздам</h2>
+            <p>Напишите своё желание — оно улетит в ночное небо и станет частью этой звёздной карты.</p>
+            <textarea id="wishInput" placeholder="Пусть здесь будет Ваше самое сокровенное..."></textarea>
+            <button class="btn" id="sendWishBtn">Отправить к звёздам</button>
+            <p style="font-size: 0.95em; color: #a3d5ff; margin-top: 20px;">*В целях конфиденциальности текст желания нигде не сохраняется.</p>
+        </div>
+    </div>
+    
+    <!-- Финальное поздравление -->
+    <div id="finalModal" class="modal">
+        <div class="modal-content">
+            <h2>С днём рождения!</h2>
+            <p>Пусть этот год принесёт лёгкость. Чтобы работа радовала, как любимое хобби, ученики приходили с горящими глазами, а вечера находили Вас с чашкой замечательного чая и интересной мыслью в голове.</p>
+            <p>Чтобы годы не измерялись грузом, а только мудростью и свободой — возможностью быть собой без оглядки и смотреть на мир с тем самым тихим, ненавязчивым интересом, который Вы когда-то в ком-то разбудили.</p>
+            <p>Пусть все будет просто замечательно!</p>
+            <p style="text-align: right; margin-top: 35px; font-style: italic; color: #a3d5ff;">С теплом и уважением.</p>
+        </div>
+    </div>
+    
+    <!-- Окно кристалла -->
+    <div id="crystalModal" class="modal">
+        <button class="close-btn" id="closeCrystal">&times;</button>
+        <div class="modal-content">
+            <h2 style="font-size: 3em; margin-bottom: 10px;">💎</h2>
+            <p style="font-size: 1.5em; color: #a3d5ff;">Пусть все будет просто замечательно.</p>
+        </div>
+    </div>
+    
+    <footer>Это звёздное небо создано специально для Вас</footer>
+
+    <script>
+        // ==================== КОНФИГУРАЦИЯ ====================
+        const TOTAL_STARS = 12;
+        const WISH_TEXTS = [
+            "Чтобы утро иногда начиналось не с будильника, а с солнечного зайчика на стене.",
+            "Чтобы работа приносила лёгкость открытий, а не тяжесть обязанностей.",
+            "Чтобы будущее не давило, а лишь мягко искривляло планы, как гравитация — пространство.",
+            "Чтобы чай в чашке был всегда нужной температуры и крепости.",
+            "Чтобы ученики приходили не за оценкой, а за интересом.",
+            "Чтобы небо над головой оставалось ясным, а горизонт — не закрывался туманом.",
+            "Чтобы дорога домой иногда позволяла смотреть по сторонам, а не только под ноги — и чтобы взгляд находил что-то стоящее внимания.",
+            "Чтобы воспоминания не тяжелели с годами, а, как хороший спектр, лишь становились чётче в главных чертах.",
+            "Чтобы в Вашей жизни всегда оставалось место для странных и преданных спутников — тех, кто продолжает слать сигналы, даже когда их орбиты стали далёкими.",
+            "Чтобы первая клубника в сезоне была сладкой, а первая снежинка — пушистой.",
+            "Чтобы иногда, чисто случайно, всё складывалось как надо — без усилий, по волшебству.",
+            "Чтобы поезда приходили вовремя, а неожиданные встречи — как раз тогда, когда они нужны."
+        ];
+        
+        const FIREWORK_COLORS = ['#FFD700', '#A3D5FF', '#D4A5FF', '#FFB6C1', '#98FB98', '#FFA07A'];
+        
+        // ==================== СОСТОЯНИЕ ====================
+        let foundStars = new Set();
+        let userWishMade = false;
+        let trailDots = [];
+        
+        // ==================== ЭЛЕМЕНТЫ DOM ====================
+        const splashScreen = document.getElementById('splashScreen');
+        const splashText = document.getElementById('splashText');
+        const mainStarsContainer = document.getElementById('mainStars');
+        const backgroundStarsContainer = document.getElementById('backgroundStars');
+        const instructionModal = document.getElementById('instructionModal');
+        const wishModal = document.getElementById('wishModal');
+        const makeWishModal = document.getElementById('makeWishModal');
+        const finalModal = document.getElementById('finalModal');
+        const crystalModal = document.getElementById('crystalModal');
+        const moon = document.getElementById('moon');
+        const secretCrystal = document.getElementById('secretCrystal');
+        const counter = document.getElementById('counter');
+        const foundCountEl = document.getElementById('foundCount');
+        const wishTextContentEl = document.getElementById('wishTextContent');
+        const wishInput = document.getElementById('wishInput');
+        const sendWishBtn = document.getElementById('sendWishBtn');
+        const startBtn = document.getElementById('startBtn');
+        
+        // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+        function init() {
+            console.log('🚀 Сайт запускается');
+            
+            setTimeout(() => {
+                splashText.style.animation = 'fadeInUp 3s ease forwards';
+                console.log('📝 Показываем текст');
+                
+                setTimeout(() => {
+                    splashScreen.style.opacity = '0';
+                    console.log('🌅 Убираем заставку');
+                    
+                    setTimeout(() => {
+                        splashScreen.style.display = 'none';
+                        instructionModal.classList.add('active');
+                        console.log('✅ Показываем инструкцию');
+                    }, 2000);
+                }, 3000);
+            }, 500);
+            
+            createBackgroundStars();
+            createMainStars();
+            setupEventListeners();
+            initTrail();
+            startShootingStars();
+            
+            console.log('🎯 Всё инициализировано');
+        }
+        
+        // ==================== СОЗДАНИЕ ЗВЁЗД ====================
+        function createBackgroundStars() {
+            for (let i = 0; i < 150; i++) {
+                const star = document.createElement('div');
+                star.className = 'bg-star';
+                const size = Math.random() * 2 + 0.8;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 85}%`;
+                star.style.opacity = Math.random() * 0.5 + 0.3;
+                backgroundStarsContainer.appendChild(star);
+            }
+        }
+        
+        function createMainStars() {
+            mainStarsContainer.innerHTML = '';
+            const positions = [];
+            
+            for (let i = 0; i < TOTAL_STARS; i++) {
+                let x = Math.random() * 40 + 10;
+                let y = Math.random() * 20 + 10;
+                
+                for (let attempt = 0; attempt < 20; attempt++) {
+                    let tooClose = false;
+                    for (const pos of positions) {
+                        const dx = x - pos.x;
+                        const dy = y - pos.y;
+                        if (Math.sqrt(dx*dx + dy*dy) < 12) {
+                            tooClose = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!tooClose) break;
+                    x = Math.random() * 80 + 10;
+                    y = Math.random() * 60 + 10;
+                }
+                
+                positions.push({ x, y });
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.dataset.index = i;
+                
+                let size = 14;
+                if (i % 4 === 0) size = 18;
+                if (i % 5 === 0) size = 10;
+                
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.left = `${x}%`;
+                star.style.top = `${y}%`;
+                
+                if (i === 1 || i === 4 || i === 7 || i === 10) {
+                    star.classList.add('accent-blue');
+                } else if (i === 3 || i === 9) {
+                    star.classList.add('accent-gold');
+                } else {
+                    star.style.backgroundColor = '#fff';
+                    star.style.boxShadow = '0 0 15px rgba(255, 255, 255, 0.8)';
+                }
+                
+                star.style.animationDelay = `${Math.random() * 2}s`;
+                star.addEventListener('click', () => showWish(i));
+                mainStarsContainer.appendChild(star);
+            }
+        }
+        
+        // ==================== ОТПРАВКА В TELEGRAM ====================
+        function sendToTelegram(wishText) {
+            console.log('📤 Отправляем в Telegram:', wishText);
+            
+            // 🔽 ВСТАВЬ СЮДА СВОЙ GOOGLE SCRIPT URL 🔽
+            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwcs5ZUJ__O1Op2vhAFBXgfOXWhNbefiuagNPpkqB7M7g_3dG5NF_BWTGBEK82hX_VR/exec';
+            
+            const fullMessage = `✨ НОВОЕ ЖЕЛАНИЕ:\n\n${wishText}\n\n📅 ${new Date().toLocaleString('ru-RU')}`;
+            
+            console.log('📨 Сообщение:', fullMessage);
+            console.log('🌐 Отправка на:', GOOGLE_SCRIPT_URL);
+            
+            // Отправка через Google Script
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ wish: fullMessage })
+            }).then(() => {
+                console.log('✅ Сообщение отправлено через Google Script');
+            }).catch(error => {
+                console.log('⚠️ Ошибка отправки:', error);
+            });
+        }
+        
+        // ==================== ОСНОВНЫЕ ФУНКЦИИ ====================
+        function showWish(starIndex) {
+            foundStars.add(starIndex);
+            updateCounter();
+            wishTextContentEl.textContent = WISH_TEXTS[starIndex];
+            wishModal.classList.add('active');
+            checkForFinal();
+        }
+        
+        function sendUserWish() {
+            const text = wishInput.value.trim();
+            
+            if (!text) {
+                alert('Напишите своё желание!');
+                wishInput.focus();
+                return;
+            }
+            
+            if (text.length > 500) {
+                alert('Слишком длинное желание. Максимум 500 символов.');
+                return;
+            }
+            
+            console.log('📝 Пользовательское желание:', text);
+            
+            // Отправка в Telegram
+            sendToTelegram(text);
+            
+            // Анимация
+            createFlyingWishAnimation(text);
+            userWishMade = true;
+            wishInput.value = '';
+            makeWishModal.classList.remove('active');
+            
+            checkForFinal();
+        }
+        
+        function createFlyingWishAnimation(text) {
+            const flyingText = document.createElement('div');
+            flyingText.className = 'flying-wish';
+            flyingText.textContent = text;
+            flyingText.style.left = '50%';
+            flyingText.style.top = '50%';
+            flyingText.style.transform = 'translate(-50%, -50%)';
+            document.body.appendChild(flyingText);
+            
+            const targetX = Math.random() * 75 + 12.5;
+            const targetY = Math.random() * 35 + 10;
+            const duration = 2000;
+            const startTime = Date.now();
+            
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                if (progress < 1) {
+                    const x = 50 + (targetX - 50) * progress;
+                    const y = 50 + (targetY - 50) * progress;
+                    const scale = 1 - progress * 0.6;
+                    const opacity = 1 - progress;
+                    
+                    flyingText.style.left = `${x}%`;
+                    flyingText.style.top = `${y}%`;
+                    flyingText.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                    flyingText.style.opacity = opacity;
+                    
+                    requestAnimationFrame(animate);
+                } else {
+                    flyingText.remove();
+                }
+            }
+            
+            animate();
+        }
+        
+        function updateCounter() {
+            foundCountEl.textContent = foundStars.size;
+            if (foundStars.size === TOTAL_STARS) {
+                counter.style.color = '#ffd700';
+                counter.style.borderColor = 'rgba(255, 215, 0, 0.6)';
+                counter.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.4)';
+            }
+        }
+        
+        function checkForFinal() {
+            if (foundStars.size === TOTAL_STARS && userWishMade) {
+                closeAllModals();
+                setTimeout(() => {
+                    finalModal.classList.add('active');
+                    setTimeout(startFireworks, 1200);
+                }, 1000);
+            }
+        }
+        
+        function closeAllModals() {
+            [instructionModal, wishModal, makeWishModal, crystalModal].forEach(modal => {
+                modal.classList.remove('active');
+            });
+        }
+        
+        // ==================== АНИМАЦИИ ====================
+        function initTrail() {
+            let lastX = 0, lastY = 0;
+            document.addEventListener('mousemove', (e) => {
+                const dx = e.clientX - lastX;
+                const dy = e.clientY - lastY;
+                if (Math.sqrt(dx*dx + dy*dy) > 10) {
+                    createTrailDot(e.clientX, e.clientY);
+                    lastX = e.clientX;
+                    lastY = e.clientY;
+                }
+            });
+        }
+        
+        function createTrailDot(x, y) {
+            const dot = document.createElement('div');
+            dot.className = 'trail-dot';
+            dot.style.left = `${x}px`;
+            dot.style.top = `${y}px`;
+            dot.style.opacity = '0.3';
+            document.body.appendChild(dot);
+            setTimeout(() => dot.remove(), 1000);
+        }
+        
+        function startShootingStars() {
+            function createShootingStar() {
+                const star = document.createElement('div');
+                star.className = 'shooting-star';
+                star.style.left = `${Math.random() * 100 + 100}%`;
+                star.style.top = `${Math.random() * 40}%`;
+                document.getElementById('skyContainer').appendChild(star);
+                
+                setTimeout(() => {
+                    star.style.transition = 'all 2s linear';
+                    star.style.left = '-100%';
+                    star.style.opacity = '1';
+                    setTimeout(() => star.remove(), 2000);
+                }, 100);
+            }
+            
+            setTimeout(() => {
+                createShootingStar();
+                setInterval(createShootingStar, 30000 + Math.random() * 30000);
+            }, 5000);
+        }
+        
+        function startFireworks() {
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => createFirework(), i * 500 + Math.random() * 300);
+            }
+        }
+        
+        function createFirework() {
+            const firework = document.createElement('div');
+            firework.className = 'firework';
+            firework.style.left = `${Math.random() * 80 + 10}%`;
+            firework.style.bottom = `${18 + Math.random() * 15}%`;
+            firework.style.backgroundColor = FIREWORK_COLORS[Math.floor(Math.random() * FIREWORK_COLORS.length)];
+            document.getElementById('skyContainer').appendChild(firework);
+            
+            setTimeout(() => {
+                firework.style.transition = 'all 0.5s ease';
+                firework.style.opacity = '1';
+                firework.style.transform = 'scale(3)';
+                setTimeout(() => {
+                    firework.style.opacity = '0';
+                    firework.style.transform = 'scale(0.5)';
+                    setTimeout(() => firework.remove(), 500);
+                }, 300);
+            }, 100);
+        }
+        
+        // ==================== ОБРАБОТЧИКИ СОБЫТИЙ ====================
+        function setupEventListeners() {
+            startBtn.addEventListener('click', () => instructionModal.classList.remove('active'));
+            document.getElementById('closeInstruction').addEventListener('click', () => instructionModal.classList.remove('active'));
+            document.getElementById('closeWish').addEventListener('click', () => wishModal.classList.remove('active'));
+            document.getElementById('closeMakeWish').addEventListener('click', () => makeWishModal.classList.remove('active'));
+            document.getElementById('closeCrystal').addEventListener('click', () => crystalModal.classList.remove('active'));
+            moon.addEventListener('click', () => { makeWishModal.classList.add('active'); wishInput.focus(); });
+            secretCrystal.addEventListener('click', () => crystalModal.classList.add('active'));
+            sendWishBtn.addEventListener('click', sendUserWish);
+            
+            wishInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendUserWish();
+                }
+            });
+            
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.modal') && !e.target.closest('.star') && 
+                    !e.target.closest('#moon') && !e.target.closest('#secretCrystal')) {
+                    closeAllModals();
+                }
+            });
+        }
+        
+        // ==================== ЗАПУСК ====================
+        window.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+    </script>
+</body>
+</html>
